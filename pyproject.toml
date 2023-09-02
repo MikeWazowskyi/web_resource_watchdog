@@ -10,6 +10,8 @@ packages = [{ include = "web_resource_watchdog" }]
 python = "^3.11"
 flask = "^2.3.3"
 python-dotenv = "^1.0.0"
+flask-sqlalchemy = "^3.0.5"
+flask-migrate = "^4.0.4"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^3.3.3"
