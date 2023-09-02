@@ -1,1 +1,1 @@
-from api import InvalidAPIUsage  # noqa
+from .api import InvalidAPIUsage  # noqa
