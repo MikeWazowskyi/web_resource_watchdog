@@ -16,6 +16,25 @@ help:  # Show help
 	@echo -e "$(COLOR_GREEN)Makefile help:"
 	@grep -E '^[a-zA-Z0-9 -]+:.*#'  Makefile | sort | while read -r l; do printf "$(COLOR_GREEN)-$$(echo $$l | cut -f 1 -d':'):$(COLOR_WHITE)$$(echo $$l | cut -f 2- -d'#')\n"; done
 
+.PHONY: makemigrations
+makemigrations: # Make migrations
+	@echo -e "$(COLOR_YELLOW)Making migrations...$(COLOR_RESET)"
+	@until poetry run flask db migrate; do \
+	  echo -e "$(COLOR_YELLOW)Waiting migrations to be created...$(COLOR_RESET)"; \
+	  sleep 5 ;\
+	done
+	@sleep 3 ;
+	@echo -e "$(COLOR_GREEN)Migrations created$(COLOR_RESET)"
+
+.PHONY: migrate
+migrate: # Start migrations
+	@echo -e "$(COLOR_YELLOW)Starting migrations...$(COLOR_RESET)"
+	@until poetry run flask db upgrade; do \
+	  echo -e "$(COLOR_YELLOW)Waiting migrations to be committed...$(COLOR_RESET)"; \
+	  sleep 5 ;\
+	done
+	@sleep 3 ;
+	@echo -e "$(COLOR_GREEN)Migrations committed$(COLOR_RESET)"
 
 .PHONY: run-flask
 run-flask:  # Run Flask app
