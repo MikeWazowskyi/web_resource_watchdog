@@ -8,7 +8,7 @@ from web_resource_watchdog.errors import InvalidAPIUsage
 
 
 @api_v1.errorhandler(InvalidAPIUsage)
-def invalid_usage(error: InvalidAPIUsage):
+def invalid_api_usage_handler(error: InvalidAPIUsage):
     """
     Handle the error for InvalidAPIUsage.
 
@@ -18,7 +18,7 @@ def invalid_usage(error: InvalidAPIUsage):
 
 
 @api_v1.errorhandler(ValidationError)
-def data_validation_failed(error: ValidationError):
+def data_validation_failed_handler(error: ValidationError):
     """
     Handle the error for ValidationError.
 
