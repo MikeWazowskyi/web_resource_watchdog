@@ -76,7 +76,7 @@ class WebResource(db.Model):
             for column in self.__table__.columns
         }
 
-    def parce_url(self) -> None:
+    def parse_url(self) -> None:
         """Parse the full_url to populate other URL-related attributes."""
         parsed_url = urlparse(self.full_url)
         self.protocol = parsed_url.scheme
