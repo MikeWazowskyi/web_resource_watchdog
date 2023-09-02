@@ -38,7 +38,9 @@ class WebResource(db.Model):
     query_params = db.Column(db.String)
     screenshot = db.Column(db.LargeBinary, nullable=True)
     fail_count = db.Column(db.Integer, default=0, nullable=False)
-    status_codes = relationship("WebResourceStatus", back_populates="resource")
+    status_codes = relationship(
+        "WebResourceStatus", back_populates="resource", uselist=False
+    )
 
     @classmethod
     def create(
