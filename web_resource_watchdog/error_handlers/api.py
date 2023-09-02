@@ -1,10 +1,10 @@
 from http import HTTPStatus
 
-from errors import InvalidAPIUsage
 from flask import jsonify
 from pydantic import ValidationError
 
 from web_resource_watchdog import api_v1
+from web_resource_watchdog.errors import InvalidAPIUsage
 
 
 @api_v1.errorhandler(InvalidAPIUsage)

@@ -1,11 +1,11 @@
 from http import HTTPStatus
 
-from errors import InvalidAPIUsage
 from flask import jsonify, request
-from models.resource import WebResource
-from schemas.resource import CreateWebResource
 
 from web_resource_watchdog import api_v1
+from web_resource_watchdog.errors import InvalidAPIUsage
+from web_resource_watchdog.models.resource import WebResource
+from web_resource_watchdog.schemas.resource import CreateWebResource
 
 
 @api_v1.route("/add_resource/", methods=["POST"])
