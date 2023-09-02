@@ -12,4 +12,8 @@ api_v1 = Blueprint(
     import_name=__name__,
 )
 
+from web_resource_watchdog.api_views import v1  # noqa
+
+from . import error_handlers  # noqa
+
 flask_app.register_blueprint(api_v1)
