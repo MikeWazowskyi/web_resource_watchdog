@@ -4,8 +4,6 @@ WORKDIR /app
 
 COPY infra ./infra
 
-COPY .env ./.env
-
 COPY migrations ./migrations
 
 COPY requirements/production.txt ./requirements.txt
