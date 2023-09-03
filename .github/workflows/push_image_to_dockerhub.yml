@@ -22,6 +22,6 @@ jobs:
       - name: Push to Docker Hub
         uses: docker/build-push-action@v2
         with:
-          context: web_resource_watchdog/.
+          context: web_resource_watchdog/infra/.
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/web_resource_watchdog:latest
