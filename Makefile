@@ -48,5 +48,9 @@ run-flask:  # Run Flask app
 
 .PHONY: start
 start: # Run Application
-	@docker-compose -f ./infra/docker-compose.yaml pull
-	@docker-compose -f ./infra/docker-compose.yaml up -d
+	@if command -v docker &> /dev/null; then \
+        docker-compose -f ./infra/docker-compose.yaml pull && \
+		docker-compose -f ./infra/docker-compose.yaml up -d; \
+    else \
+        echo "Docker is not installed"; \
+    fi
