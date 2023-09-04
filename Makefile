@@ -45,3 +45,8 @@ run-flask:  # Run Flask app
 	done
 	@sleep 3 ;
 	@echo -e "$(COLOR_GREEN)Flask app started$(COLOR_RESET)"
+
+.PHONY: start
+start: # Run Application
+	@docker-compose -f ./infra/docker-compose.yaml pull
+	@docker-compose -f ./infra/docker-compose.yaml up -d
