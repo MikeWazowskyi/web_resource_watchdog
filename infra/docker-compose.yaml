@@ -6,6 +6,7 @@ services:
     container_name: web_resource_watchdog_app
     image: mikhailkas/web_resource_watchdog:latest
     entrypoint: /app/infra/flask-entrypoint.sh
+    restart: always
     env_file:
       - ../.env
     ports:
@@ -13,7 +14,6 @@ services:
 
     depends_on:
       - db
-
 
   db:
     container_name: postgres_database
@@ -27,6 +27,17 @@ services:
     container_name: redis
     image: redis:alpine
 
+  celery:
+    container_name: celery_workers
+    image: mikhailkas/web_resource_watchdog:latest
+    entrypoint: /app/infra/worker-entrypoint.sh
+    restart: always
+    env_file:
+      - ../.env
+    depends_on:
+      - flask
+      - redis
+      - db
 
   nginx:
     container_name: nginx
