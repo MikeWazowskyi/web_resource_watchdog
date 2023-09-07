@@ -70,7 +70,17 @@ run_redis: # Start Redis Docker-image
 .PHONY: run_celery_worker
 run_celery_worker: # Start celery worker
 	@echo -e "$(COLOR_YELLOW)Starting celery worker...$(COLOR_RESET)"
-	@until poetry run celery -A $(CELERY_APP_PATH) worker --loglevel=info; do \
+	@until poetry run celery -A $(CELERY_APP_PATH) worker --pool=solo --loglevel=info; do \
+	  echo -e "$(COLOR_YELLOW)Waiting celery worker to be started...$(COLOR_RESET)"; \
+	  sleep 5 ;\
+	done
+	@sleep 3 ;
+	@echo -e "$(COLOR_GREEN)Celery worker started$(COLOR_RESET)"
+
+.PHONY: run_flower
+run_flower: # Start celery worker
+	@echo -e "$(COLOR_YELLOW)Starting celery worker...$(COLOR_RESET)"
+	@until poetry run celery flower -A $(CELERY_APP_PATH); do \
 	  echo -e "$(COLOR_YELLOW)Waiting celery worker to be started...$(COLOR_RESET)"; \
 	  sleep 5 ;\
 	done
