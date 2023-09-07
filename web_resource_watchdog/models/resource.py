@@ -58,12 +58,46 @@ class WebResource(db.Model):
             web_resource.save(session)
         return web_resource
 
+    @classmethod
+    def bulk_create(
+        cls,
+        urls: list[str],
+        commit: bool = True,
+        session: Session | None = None,
+    ) -> list["WebResource"]:
+        """Web Resource bulk create."""
+        web_resources = [
+            cls.create({"full_url": full_url}, commit=False)
+            for full_url in urls
+        ]
+        if commit:
+            cls.bulk_save(web_resources, session)
+        return web_resources
+
     def save(self, session: Session = None) -> None:
         """Save the WebResource instance to the database."""
         if session is None:
             session = db.session
         try:
             session.add(self)
+            session.commit()
+        except IntegrityError as error:
+            raise InvalidAPIUsage(
+                message=str(error),
+                status_code=HTTPStatus.BAD_REQUEST,
+            )
+
+    @classmethod
+    def bulk_save(
+        cls,
+        web_resources: list["WebResource"],
+        session: Session | None = None,
+    ):
+        """Web Resource bulk save."""
+        if session is None:
+            session = db.session
+        try:
+            session.add_all(web_resources)
             session.commit()
         except IntegrityError as error:
             raise InvalidAPIUsage(

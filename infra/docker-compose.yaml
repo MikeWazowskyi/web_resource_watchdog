@@ -5,7 +5,7 @@ services:
   flask:
     container_name: web_resource_watchdog_app
     image: mikhailkas/web_resource_watchdog:latest
-    entrypoint: /app/infra/start_app.sh
+    entrypoint: /app/infra/flask-entrypoint.sh
     env_file:
       - ../.env
     ports:
