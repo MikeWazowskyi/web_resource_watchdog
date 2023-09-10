@@ -44,9 +44,8 @@ def parse_zip_file(file: bytes, pattern: re.Pattern = None) -> dict[str, list]:
 
 
 @shared_task
-def save_to_db(data: list[str]) -> None:
+def save_resources_to_db(data: dict[str, list]) -> None:
     """Save Web Resource data to database."""
-    try:
-        WebResource.bulk_create(data)
-    except Exception:
-        pass
+    parse_data = data.get("data", None)
+    if parse_data:
+        WebResource.bulk_create(parse_data)
