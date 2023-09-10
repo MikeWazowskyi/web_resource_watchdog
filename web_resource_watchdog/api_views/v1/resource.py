@@ -10,7 +10,10 @@ from web_resource_watchdog.schemas.resource import (
     ZipFileValidator,
     allowed_file,
 )
-from web_resource_watchdog.tasks.resource import parse_zip_file, save_to_db
+from web_resource_watchdog.tasks.resource import (
+    parse_zip_file,
+    save_resources_to_db,
+)
 
 
 @api_v1.route("/add_resource/", methods=["POST"])
@@ -71,7 +74,7 @@ def add_resource_from_zip():
         )
     file_data = file.read()
     ZipFileValidator.validate_zip_file(file_data)
-    task = parse_zip_file.apply_async((file_data,), link=save_to_db.s())
+    task = (parse_zip_file.s(file_data) | save_resources_to_db.s())()
     return (
         jsonify(
             {"message": "Zip file processing started.", "task_id": task.id}
