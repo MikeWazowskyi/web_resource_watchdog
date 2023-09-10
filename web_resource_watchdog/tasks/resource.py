@@ -1,5 +1,4 @@
 import io
-import logging
 import re
 import zipfile
 
@@ -16,27 +15,32 @@ URL_PATTERN = re.compile(
 
 
 @shared_task
-def parse_zip_file(file: bytes, pattern: re.Pattern = None) -> list[str]:
+def parse_zip_file(file: bytes, pattern: re.Pattern = None) -> dict[str, list]:
     """Parse a zip file containing text files and extracts URLs."""
     if pattern is None:
         pattern = URL_PATTERN
     zip_buffer = io.BytesIO(file)
     result = set()
-    try:
-        with zipfile.ZipFile(zip_buffer, "r") as zipf:
-            for filename in zipf.namelist():
-                with zipf.open(filename) as file_in_zip:
-                    try:
-                        file = file_in_zip.read().decode("utf-8")
-                    except UnicodeDecodeError as decode_error:
-                        logging.error(decode_error)
+    errors = []
+    with zipfile.ZipFile(zip_buffer, "r") as zipf:
+        for file in zipf.infolist():
+            if file.is_dir():
+                continue
+            with zipf.open(file) as file_in_zip:
+                try:
+                    file_data = file_in_zip.read().decode("utf-8")
+                except UnicodeDecodeError:
+                    errors.append(f"Cannot decode file {file.filename}.")
+                else:
+                    finds = pattern.findall(file_data)
+                    if finds:
+                        result.update(finds)
                     else:
-                        finds = pattern.findall(file)
-                        if finds:
-                            result.update(finds)
-    except zipfile.BadZipFile:
-        pass
-    return list(result)
+                        errors.append(f"File {file.filename} has no urls.")
+    parse_data = {"data": list(result)}
+    if errors:
+        parse_data["errors"] = errors
+    return parse_data
 
 
 @shared_task
