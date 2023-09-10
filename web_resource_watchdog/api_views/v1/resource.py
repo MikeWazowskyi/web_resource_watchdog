@@ -10,7 +10,10 @@ from web_resource_watchdog.schemas.resource import (
     ZipFileValidator,
     allowed_file,
 )
-from web_resource_watchdog.tasks.resource import parse_zip_file, save_to_db
+from web_resource_watchdog.tasks.resource import (
+    parse_zip_file,
+    save_resources_to_db,
+)
 
 
 @api_v1.route("/add_resource/", methods=["POST"])
@@ -71,7 +74,7 @@ def add_resource_from_zip():
         )
     file_data = file.read()
     ZipFileValidator.validate_zip_file(file_data)
-    task = parse_zip_file.apply_async((file_data,), link=save_to_db.s())
+    task = (parse_zip_file.s(file_data) | save_resources_to_db.s())()
     return (
         jsonify(
             {"message": "Zip file processing started.", "task_id": task.id}
@@ -81,7 +84,7 @@ def add_resource_from_zip():
 
 
 @api_v1.route("/get_parse_status/<string:task_id>/", methods=["GET"])
-def task_result(task_id: str) -> dict[str, object]:
+def get_parse_status(task_id: str):
     """
     Retrieve the status and result of a task for parsing a zip file.
 
@@ -91,13 +94,49 @@ def task_result(task_id: str) -> dict[str, object]:
 
     Returns:
         dict[str, object]: A dictionary of information about the task:
-            - "ready" (bool): Indicates whether the task has completed
-              (True) or is still pending (False).
-            - "successful" (bool): Indicates whether the task was executed
-               successfully (True) or had an error (False).
+            - "status" (str): Status of the task: "pending", "success",
+            or "error".
+            - "message" (str): A message describing the task status
+            or error.
     """
-    result = parse_zip_file.AsyncResult(task_id)
-    return {
-        "ready": result.ready(),
-        "successful": result.successful(),
-    }
+    try:
+        result = parse_zip_file.AsyncResult(task_id)
+        if result.successful():
+            return (
+                jsonify(
+                    {
+                        "status": "success",
+                        "message": "Task executed successfully",
+                    }
+                ),
+                HTTPStatus.OK,
+            )
+        elif result.failed():
+            return (
+                jsonify(
+                    {
+                        "status": "error",
+                        "message": "Task encountered an error",
+                        "error": result.traceback,
+                    }
+                ),
+                HTTPStatus.OK,
+            )
+        else:
+            return (
+                jsonify(
+                    {"status": "pending", "message": "Task is still pending"}
+                ),
+                HTTPStatus.OK,
+            )
+    except Exception as e:
+        return (
+            jsonify(
+                {
+                    "status": "error",
+                    "message": "Internal server error",
+                    "error": str(e),
+                }
+            ),
+            HTTPStatus.OK,
+        )
