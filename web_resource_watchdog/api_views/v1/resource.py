@@ -11,7 +11,7 @@ from web_resource_watchdog.schemas.resource import (
     allowed_file,
 )
 from web_resource_watchdog.tasks.resource import (
-    parse_zip_file,
+    find_resources,
     save_resources_to_db,
 )
 
@@ -74,7 +74,7 @@ def add_resource_from_zip():
         )
     file_data = file.read()
     ZipFileValidator.validate_zip_file(file_data)
-    task = (parse_zip_file.s(file_data) | save_resources_to_db.s())()
+    task = (find_resources.s(file_data) | save_resources_to_db.s())()
     return (
         jsonify(
             {"message": "Zip file processing started.", "task_id": task.id}
@@ -100,7 +100,7 @@ def get_parse_status(task_id: str):
             or error.
     """
     try:
-        result = parse_zip_file.AsyncResult(task_id)
+        result = find_resources.AsyncResult(task_id)
         if result.successful():
             return (
                 jsonify(
