@@ -13,7 +13,7 @@ URL_PATTERN = re.compile(
 def parse_zip_file(
     file: bytes,
     pattern: re.Pattern | None = None,
-) -> tuple[list[str], list[str]]:
+) -> dict[str, list[str]]:
     """Parse a zip file containing text files and extracts URLs."""
     if pattern is None:
         pattern = URL_PATTERN
@@ -35,4 +35,4 @@ def parse_zip_file(
                         result.update(finds)
                     else:
                         errors.append(f"File {file.filename} has no urls.")
-    return list(result), errors
+    return {"data": list(result), "errors": errors}
