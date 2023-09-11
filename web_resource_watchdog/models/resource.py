@@ -11,11 +11,59 @@ from web_resource_watchdog import db
 from web_resource_watchdog.errors import InvalidAPIUsage
 
 
-class WebResource(db.Model):
+class BaseModel(db.Model):
+    """Project base model.
+
+    Attributes:
+        id (int): The primary key of the base model.
+    """
+
+    __abstract__ = True
+    id = db.Column(db.Integer, primary_key=True)
+
+    def save(self, session: Session = None) -> None:
+        """Save the BaseModel instance to the database."""
+        if session is None:
+            session = db.session
+        try:
+            session.add(self)
+            session.commit()
+        except IntegrityError as error:
+            raise InvalidAPIUsage(
+                message=str(error),
+                status_code=HTTPStatus.BAD_REQUEST,
+            )
+
+    @classmethod
+    def bulk_save(
+        cls,
+        data: list["BaseModel"],
+        session: Session | None = None,
+    ):
+        """Web Resource bulk save."""
+        if session is None:
+            session = db.session
+        try:
+            session.add_all(data)
+            session.commit()
+        except IntegrityError as error:
+            raise InvalidAPIUsage(
+                message=str(error),
+                status_code=HTTPStatus.BAD_REQUEST,
+            )
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert the BaseModel instance to a dictionary."""
+        return {
+            column.key: getattr(self, column.key)
+            for column in self.__table__.columns
+        }
+
+
+class WebResource(BaseModel):
     """Model for representing web resources.
 
     Attributes:
-        id (int): The primary key of the web resource.
         full_url (str): The full URL of the web resource.
         protocol (str): The protocol used (e.g., http, https).
         domain (str): The domain of the web resource.
@@ -29,7 +77,6 @@ class WebResource(db.Model):
             resource status entries.
     """
 
-    id = db.Column(db.Integer, primary_key=True)
     full_url = db.Column(db.String, nullable=False, unique=True)
     protocol = db.Column(db.String, nullable=False)
     domain = db.Column(db.String, nullable=False)
@@ -74,44 +121,6 @@ class WebResource(db.Model):
             cls.bulk_save(web_resources, session)
         return web_resources
 
-    def save(self, session: Session = None) -> None:
-        """Save the WebResource instance to the database."""
-        if session is None:
-            session = db.session
-        try:
-            session.add(self)
-            session.commit()
-        except IntegrityError as error:
-            raise InvalidAPIUsage(
-                message=str(error),
-                status_code=HTTPStatus.BAD_REQUEST,
-            )
-
-    @classmethod
-    def bulk_save(
-        cls,
-        web_resources: list["WebResource"],
-        session: Session | None = None,
-    ):
-        """Web Resource bulk save."""
-        if session is None:
-            session = db.session
-        try:
-            session.add_all(web_resources)
-            session.commit()
-        except IntegrityError as error:
-            raise InvalidAPIUsage(
-                message=str(error),
-                status_code=HTTPStatus.BAD_REQUEST,
-            )
-
-    def to_dict(self) -> dict[str, Any]:
-        """Convert the WebResource instance to a dictionary."""
-        return {
-            column.key: getattr(self, column.key)
-            for column in self.__table__.columns
-        }
-
     def parse_url(self) -> None:
         """Parse the full_url to populate other URL-related attributes."""
         parsed_url = urlparse(self.full_url)
@@ -121,11 +130,10 @@ class WebResource(db.Model):
         self.domain, self.domain_zone = parsed_url.netloc.rsplit(".", 1)
 
 
-class WebResourceStatus(db.Model):
+class WebResourceStatus(BaseModel):
     """Model for tracking the status of web resources.
 
     Attributes:
-        id (int): The primary key of the web resource status entry.
         resource_id (int): The foreign key referencing the associated
             web resource.
         status_code (int, optional): The HTTP status code received for
@@ -141,7 +149,6 @@ class WebResourceStatus(db.Model):
         resource: A reference to the associated web resource.
     """
 
-    id = db.Column(db.Integer, primary_key=True)
     resource_id = db.Column(db.Integer, db.ForeignKey(WebResource.id))
     status_code = db.Column(db.Integer, nullable=True)
     request_time = db.Column(
