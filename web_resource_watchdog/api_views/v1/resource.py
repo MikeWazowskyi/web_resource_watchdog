@@ -1,8 +1,9 @@
 from http import HTTPStatus
 
+from celery import current_app
 from flask import jsonify, request
 
-from web_resource_watchdog import api_v1
+from web_resource_watchdog import Config, api_v1
 from web_resource_watchdog.errors import InvalidAPIUsage
 from web_resource_watchdog.models.resource import WebResource
 from web_resource_watchdog.schemas.resource import (
@@ -100,17 +101,24 @@ def get_parse_status(task_id: str):
             or error.
     """
     try:
+        broker = current_app.backend.client
+        error_key = Config.ERROR_KEY.format(task_id=task_id)
+        parse_errors = list(
+            map(
+                lambda error: error.decode("utf-8"),
+                broker.lrange(error_key, 0, -1),
+            )
+        )
         result = find_resources.AsyncResult(task_id)
         if result.successful():
-            return (
-                jsonify(
-                    {
-                        "status": "success",
-                        "message": "Task executed successfully",
-                    }
-                ),
-                HTTPStatus.OK,
-            )
+            response = {
+                "status": "completed",
+                "message": "Task executed successfully",
+            }
+            if parse_errors:
+                response["message"] = "Task executed with errors"
+                response["errors"] = parse_errors
+            return response, HTTPStatus.OK
         elif result.failed():
             return (
                 jsonify(
