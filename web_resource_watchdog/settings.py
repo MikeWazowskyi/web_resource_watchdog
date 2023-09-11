@@ -26,3 +26,4 @@ class Config:
     ALLOWED_ARCHIVES_EXTENSIONS = {
         "zip",
     }
+    ERROR_KEY = "task_errors:{task_id}"
