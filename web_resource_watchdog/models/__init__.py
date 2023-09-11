@@ -1,1 +1,1 @@
-from .resource import WebResource  # noqa
+from .resource import BaseModel, WebResource, WebResourceStatus  # noqa
