@@ -15,3 +15,7 @@ class InvalidAPIUsage(Exception):
     def to_dict(self):
         """Convert InvalidAPIUsage instance to dictionary."""
         return dict(error=self.message)
+
+    def __repr__(self):
+        """Convert InvalidAPIUsage instance to sting."""
+        return f"{self.__class__}: {self.message}, {self.status_code}"
